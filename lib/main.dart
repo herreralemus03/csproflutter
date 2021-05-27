@@ -1,5 +1,6 @@
 import 'package:boletas_app/pages/form_page.dart';
 import 'package:boletas_app/pages/raw_page.dart';
+import 'package:boletas_app/pages/record_files_page.dart';
 import 'package:boletas_app/providers/dictionary_provider.dart';
 import 'package:flutter/material.dart';
 import "dart:math" as math;
@@ -198,7 +199,24 @@ class _TestPageState extends State<TestPage> {
           leading: Icon(Icons.read_more),
           title: Text("READ"),
           subtitle: Text("Muestra los registros asociados al diccionario"),
-          onTap: () {},
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+              return FutureBuilder(
+                future: dictionaryProvider.getRecords(element['uuid']),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return buildErrorContent(snapshot.error.toString());
+                  } else if (snapshot.hasData) {
+                    return RecordFilesPage(
+                      records: snapshot.data,
+                    );
+                  } else {
+                    return buildLoadingContent();
+                  }
+                },
+              );
+            }));
+          },
         ),
         ListTile(
           leading: Icon(Icons.build),
