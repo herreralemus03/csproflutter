@@ -1,8 +1,10 @@
+import 'package:boletas_app/pages/clusters_page.dart';
 import 'package:boletas_app/pages/form_page.dart';
 import 'package:boletas_app/pages/raw_page.dart';
 import 'package:boletas_app/pages/record_files_page.dart';
 import 'package:boletas_app/providers/dictionary_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import "dart:math" as math;
 
 import 'package:flutter_json_widget/flutter_json_widget.dart';
@@ -17,12 +19,33 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      initialRoute: "/",
+      theme: ThemeData(
+        appBarTheme: AppBarTheme(
+          actionsIconTheme: IconThemeData(color: Colors.black),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          centerTitle: true,
+          shadowColor: Colors.black,
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.white,
+            statusBarBrightness: Brightness.light,
+            statusBarIconBrightness: Brightness.light,
+          ),
+          titleTextStyle: TextStyle(color: Colors.black),
+          brightness: Brightness.light,
+          iconTheme: IconThemeData(color: Colors.black),
+          elevation: 0,
+          textTheme: TextTheme(headline6: TextStyle(color: Colors.black)),
+        ),
+        backgroundColor: Colors.white,
+      ),
+      initialRoute: "/clusters",
       routes: {
         "/": (BuildContext context) => TestPage(
               title: "Home page",
               prefix: "code",
             ),
+        "/clusters": (context) => ClustersPage()
       },
     );
   }

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:boletas_app/models/dictionary.dart';
 import 'package:boletas_app/models/household.dart';
@@ -18,11 +17,11 @@ class DictionaryProvider {
     }
   }
 
-  Future<List<Household>> getHouseHolds() async {
+  Future<List<HouseHold>> getHouseHolds() async {
     final response = await doGet("households/get/all");
     final decodedData = json.decode(utf8.decode(response.bodyBytes));
     final houseHolds =
-        (decodedData as List).map((e) => Household.fromJson(e)).toList();
+        (decodedData as List).map((e) => HouseHold.fromJson(e)).toList();
     return houseHolds;
   }
 

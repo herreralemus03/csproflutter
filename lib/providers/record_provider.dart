@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:boletas_app/config/server_config.dart';
 
 class RecordProvider {
-  String host = "172.16.204.81";
-  String port = "8080";
   Future<http.Response> doGet(String unencodedPath) async {
     try {
       final uri = Uri.parse("http://$host:$port/$unencodedPath");
