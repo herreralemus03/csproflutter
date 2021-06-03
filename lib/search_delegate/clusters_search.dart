@@ -27,7 +27,7 @@ class ClustersSearch extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    provider.getFilteredClusters(params: {"code": query});
+    provider.getClusters(params: {"code": query});
     return StreamBuilder<Map<String, Cluster>>(
       stream: provider.filteredDataStream,
       builder: (context, snapshot) {

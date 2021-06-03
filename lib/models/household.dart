@@ -270,7 +270,7 @@ class HouseHold {
 
 class Cluster {
   String uuid;
-  int code;
+  String code;
   Province province;
   Region region;
   District district;
@@ -288,7 +288,7 @@ class Cluster {
 
   Cluster.fromJson(Map<String, dynamic> json) {
     if (json["uuid"] is String) this.uuid = json["uuid"];
-    if (json["code"] is int) this.code = json["code"];
+    if (json["code"] is String) this.code = json["code"];
     if (json["province"] is Map)
       this.province =
           json["province"] == null ? null : Province.fromJson(json["province"]);

@@ -42,12 +42,16 @@ class ClusterProvider {
     return response;
   }
 
-  Map<String, Cluster> clusters = new Map();
-  ClustersPageData clustersPageData = ClustersPageData(number: 0);
+  ClustersPageData clustersPageData = ClustersPageData(number: 0, content: {});
+  ClustersPageData filteredClustersPageData =
+      ClustersPageData(number: 0, content: {});
   bool isLoading = false;
   Future<ClustersPageData> getClusters(
       {Map<String, String> params = const {},
       bool loadNextPage = false}) async {
+    bool filtered = (params["keyword"] ?? "").isNotEmpty;
+    ClustersPageData clustersPageData =
+        filtered ? this.filteredClustersPageData : this.clustersPageData;
     if (isLoading) {
       return await Future.delayed(Duration(seconds: 3), () {
         isLoading = false;
@@ -57,49 +61,34 @@ class ClusterProvider {
     isLoading = true;
     final map = {
       "keyword": params["keyword"] ?? "",
-      "page": "${!loadNextPage ? clustersPageData.number + 1 : 0}",
+      "page": "${loadNextPage ? clustersPageData.number + 1 : 0}",
       "size": params["size"] ?? "15",
     };
     final response = await doGet("get/all", map);
     final decodedData = json.decode(utf8.decode(response.bodyBytes));
+    this.clustersPageData =
+        syncData(loadNextPage, decodedData, clustersPageData);
+    return clustersPageData;
+  }
+
+  ClustersPageData syncData(bool loadNextPage, Map<String, dynamic> decodedData,
+      ClustersPageData clustersPageData) {
     if (!loadNextPage) {
       clustersPageData = ClustersPageData.fromJson(decodedData);
       dataSink(clustersPageData);
       isLoading = false;
       return clustersPageData;
     }
-    this.clusters.addAll(clustersPageData.content);
+    Map<String, Cluster> clusterListTmp = Map();
+    clusterListTmp.addAll(Map.from(clustersPageData.content));
     clustersPageData = ClustersPageData.fromJson(decodedData);
-    clustersPageData.content = this.clusters;
+    clusterListTmp.addAll(Map.from(clustersPageData.content));
+    clustersPageData.content = clusterListTmp;
     dataSink(clustersPageData);
     isLoading = false;
     return clustersPageData;
   }
 
-  Future<ClustersPageData> loadMore({page = 1}) async {
-    if (isLoading) return clustersPageData;
-    isLoading = true;
-    final response =
-        await doGet("get/all", {"page": "${clustersPageData.number + 1}"});
-    final decodedData = json.decode(utf8.decode(response.bodyBytes));
-    clustersPageData = ClustersPageData.fromJson(decodedData);
-    this.clusters.addAll(clustersPageData.content);
-    clustersPageData.content = this.clusters;
-    dataSink(clustersPageData);
-    isLoading = false;
-    return clustersPageData;
-  }
-
-  Future<Map<String, Cluster>> getFilteredClusters(
-      {Map<String, String> params = const {}}) async {
-    final response = await doGet("get/filter", params);
-    final decodedData = json.decode(utf8.decode(response.bodyBytes));
-    clustersPageData = ClustersPageData.fromJson(decodedData);
-    dataSink(clustersPageData);
-    return clusters;
-  }
-
-  int houseHoldPage = 0;
   Future<HouseHoldsPageData> getClusterHouseHolds(
       {Map<String, String> params = const {}}) async {
     if (isLoading) return houseHoldDataStream.first;

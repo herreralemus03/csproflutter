@@ -1,8 +1,10 @@
 import 'package:boletas_app/pages/clusters_page.dart';
 import 'package:boletas_app/pages/form_page.dart';
+import 'package:boletas_app/pages/home_page.dart';
 import 'package:boletas_app/pages/raw_page.dart';
 import 'package:boletas_app/pages/record_files_page.dart';
 import 'package:boletas_app/providers/dictionary_provider.dart';
+import 'package:boletas_app/widgets/empty_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import "dart:math" as math;
@@ -21,32 +23,35 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         appBarTheme: AppBarTheme(
-          actionsIconTheme: IconThemeData(color: Colors.black),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          actionsIconTheme: IconThemeData(color: Colors.white),
+          backgroundColor: Colors.blueGrey.shade900,
+          foregroundColor: Colors.white,
           centerTitle: true,
           shadowColor: Colors.black,
           systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: Colors.white,
-            statusBarBrightness: Brightness.light,
-            statusBarIconBrightness: Brightness.light,
+            statusBarColor: Colors.blueGrey.shade900,
+            statusBarBrightness: Brightness.dark,
+            statusBarIconBrightness: Brightness.dark,
           ),
-          titleTextStyle: TextStyle(color: Colors.black),
-          brightness: Brightness.light,
-          iconTheme: IconThemeData(color: Colors.black),
+          titleTextStyle: TextStyle(color: Colors.white),
+          brightness: Brightness.dark,
+          iconTheme: IconThemeData(color: Colors.white),
           elevation: 0,
-          textTheme: TextTheme(headline6: TextStyle(color: Colors.black)),
+          textTheme: TextTheme(headline6: TextStyle(color: Colors.white)),
         ),
         backgroundColor: Colors.white,
       ),
-      initialRoute: "/clusters",
+      initialRoute: "/",
       routes: {
-        "/": (BuildContext context) => TestPage(
+        "/": (context) => HomePage(),
+        "/diccionarios": (BuildContext context) => TestPage(
               title: "Home page",
               prefix: "code",
             ),
-        "/clusters": (context) => ClustersPage()
+        "/clusters": (context) => ClustersPage(),
       },
+      onUnknownRoute: (context) =>
+          MaterialPageRoute(builder: (context) => Scaffold(body: EmptyPage())),
     );
   }
 }
