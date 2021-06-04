@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:boletas_app/models/dictionary.dart';
+import 'package:flutter/services.dart';
 
 class FormPage extends StatefulWidget {
   final Dictionary dictionary;
@@ -10,10 +11,17 @@ class FormPage extends StatefulWidget {
 }
 
 class _FormPageState extends State<FormPage> {
+  List<String> recordLabels = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.dictionary.name)),
+      drawer: Drawer(
+        child: ListView(
+          children: buildDrawerItems(widget.dictionary),
+        ),
+      ),
       body: Container(
         padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
         child: buildRecordsSections(widget.dictionary),
@@ -21,40 +29,132 @@ class _FormPageState extends State<FormPage> {
     );
   }
 
-  Widget buildRecordsSections(Dictionary dictionary) {
-    return ListView.builder(
-        itemBuilder: (context, index) =>
-            buildFieldsByRecord(dictionary.level.records[index]),
-        itemCount: dictionary.level.records.length);
+  List<Widget> buildDrawerItems(Dictionary dictionary) {
+    return dictionary.level.records
+        .map((e) => ListTile(title: Text(e.label)))
+        .toList();
   }
 
-  Widget buildFieldsByRecord(Record record) {
+  Widget buildRecordsSections(Dictionary dictionary) {
+    return buildPages(dictionary);
+  }
+
+  Widget buildPages(Dictionary dictionary) {
+    final pages = dictionary.level.records
+        .map((record) => buildFieldsByRecord(record))
+        .where((element) => element.isNotEmpty)
+        .map((e) => ListView(children: e.toList()))
+        .toList();
+
+    return PageView(
+      children: pages,
+    );
+  }
+
+  Map<String, TextEditingController> textControllers = Map();
+  Map<String, String> values = Map();
+  List<Widget> buildFieldsByRecord(Record record) {
     final items = record.items.where((element) => !element.zeroFill).toList();
-    final fields = List<Widget>.generate(
-        items.length,
-        (index) => TextFormField(
-              decoration: InputDecoration(
-                labelText: items[index].label,
-                icon: CircleAvatar(
-                  child: Text(
-                    "${items[index].name}",
-                    style: TextStyle(fontSize: 8),
-                  ),
+    final fields = items.map((item) {
+      if (item.valueSet != null) {
+        if (item.label.length > 20) {
+          return buildRadio(item);
+        }
+        return buildDropDown(item);
+      }
+      return buildTextField(item);
+    }).toList();
+    return fields;
+  }
+
+  Widget buildRadio(Item item) {
+    final radioList = item.valueSet.values
+        .map(
+          (e) => RadioListTile(
+              value: e.key,
+              groupValue: values[item.name],
+              title: Text("${e.value}"),
+              onChanged: (value) => setState(() => values[e.key] = value)),
+        )
+        .toList();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28.0),
+      child: Column(
+        children: [
+          Text(
+            "${item.label}",
+            overflow: TextOverflow.fade,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Divider(),
+          ...radioList,
+        ],
+      ),
+    );
+  }
+
+  Widget buildDropDown(Item item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28.0),
+      child: DropdownButtonFormField(
+        isExpanded: true,
+        hint: Text(
+          item.label,
+          overflow: TextOverflow.ellipsis,
+        ),
+        isDense: true,
+        value: values[item.name],
+        items: item.valueSet.values
+            .map(
+              (e) => DropdownMenuItem(
+                value: e.key,
+                child: Text(
+                  "${e.value}",
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-            ))
-      ..insert(
-        0,
-        Padding(
-          padding: const EdgeInsets.only(top: 48.0),
-          child: Column(
-            children: [
-              Text(record.label),
-              Divider(),
-            ],
-          ),
+            )
+            .toList(),
+        onChanged: (val) {
+          setState(() {
+            values[item.name] = val;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget buildTextField(Item item) {
+    if (textControllers["${item.name}"] == null) {
+      textControllers["${item.name}"] = TextEditingController();
+      textControllers["${item.name}"].addListener(() {
+        setState(() {
+          textControllers["${item.name}"].text;
+        });
+      });
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28.0),
+      child: TextFormField(
+        controller: textControllers["${item.name}"],
+        decoration: InputDecoration(
+          labelText: item.label,
+          counter: Text(
+              "${textControllers['${item.name}'].text.length} / ${item.len}"),
+          counterText: "longitud",
         ),
-      );
-    return Column(children: fields);
+        keyboardType: item.dataType.toLowerCase() == "alpha"
+            ? TextInputType.text
+            : TextInputType.number,
+        inputFormatters: [
+          LengthLimitingTextInputFormatter(item.len),
+          item.dataType.toLowerCase() == "alpha"
+              ? FilteringTextInputFormatter.deny("")
+              : FilteringTextInputFormatter.digitsOnly
+        ],
+      ),
+    );
   }
 }

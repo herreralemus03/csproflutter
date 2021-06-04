@@ -1,6 +1,7 @@
 import 'package:boletas_app/pages/clusters_page.dart';
 import 'package:boletas_app/pages/form_page.dart';
 import 'package:boletas_app/pages/home_page.dart';
+import 'package:boletas_app/pages/interview_page.dart';
 import 'package:boletas_app/pages/raw_page.dart';
 import 'package:boletas_app/pages/record_files_page.dart';
 import 'package:boletas_app/providers/dictionary_provider.dart';
@@ -235,8 +236,8 @@ class _TestPageState extends State<TestPage> {
                   if (snapshot.hasError) {
                     return buildErrorContent(snapshot.error.toString());
                   } else if (snapshot.hasData) {
-                    return RecordFilesPage(
-                      records: snapshot.data,
+                    return InterViewPage(
+                      arguments: snapshot.data,
                     );
                   } else {
                     return buildLoadingContent();

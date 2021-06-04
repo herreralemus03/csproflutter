@@ -16,7 +16,7 @@ class _RecordFilesPageState extends State<RecordFilesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(title: Text("Diccionarios")),
       body: Container(
         child: ListView.builder(
           itemCount: widget.records.length,
