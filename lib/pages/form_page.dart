@@ -29,9 +29,17 @@ class _FormPageState extends State<FormPage> {
     );
   }
 
+  PageController pageController = PageController();
   List<Widget> buildDrawerItems(Dictionary dictionary) {
     return dictionary.level.records
-        .map((e) => ListTile(title: Text(e.label)))
+        .asMap()
+        .map((k, v) => MapEntry(
+            k,
+            ListTile(
+              title: Text(v.label),
+              onTap: () => pageController.jumpToPage(k),
+            )))
+        .values
         .toList();
   }
 
@@ -47,6 +55,7 @@ class _FormPageState extends State<FormPage> {
         .toList();
 
     return PageView(
+      controller: pageController,
       children: pages,
     );
   }
