@@ -4,7 +4,7 @@ class Dictionary {
   int recordTypeStart;
   int recordTypeLen;
   String positions;
-  Map<String, String> languages;
+  List languages;
   List<String> relation;
   Level level;
   String name;
@@ -36,7 +36,7 @@ class Dictionary {
     if (json["recordTypeLen"] is int)
       this.recordTypeLen = json["recordTypeLen"];
     if (json["positions"] is String) this.positions = json["positions"];
-    if (json["languages"] is Map) this.languages = json["languages"] ?? [];
+    if (json["languages"] is List) this.languages = json["languages"] ?? [];
     if (json["relation"] is List)
       this.relation =
           (json["relation"] as List).map((e) => "$e").toList() ?? [];
@@ -64,6 +64,7 @@ class Dictionary {
     data["note"] = this.note;
     data["zeroFill"] = this.zeroFill;
     data["decimalChar"] = this.decimalChar;
+    data["languages"] = this.languages;
     return data;
   }
 }

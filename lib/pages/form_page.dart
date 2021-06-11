@@ -23,8 +23,13 @@ class _FormPageState extends State<FormPage> {
         ),
       ),
       body: Container(
-        padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-        child: buildRecordsSections(widget.dictionary),
+        padding: EdgeInsets.symmetric(
+          vertical: 0,
+          horizontal: 10,
+        ),
+        child: buildRecordsSections(
+          widget.dictionary,
+        ),
       ),
     );
   }

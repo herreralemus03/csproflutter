@@ -195,7 +195,7 @@ class Sort {
 class HouseHold {
   String uuid;
   String code;
-  int houseHoldNumber;
+  String houseHoldNumber;
   int listedHouseHoldNumber;
   int structureNumber;
   int dwellingNumber;
@@ -223,7 +223,7 @@ class HouseHold {
   HouseHold.fromJson(Map<String, dynamic> json) {
     if (json["uuid"] is String) this.uuid = json["uuid"];
     if (json["code"] is String) this.code = json["code"];
-    if (json["houseHoldNumber"] is int)
+    if (json["houseHoldNumber"] is String)
       this.houseHoldNumber = json["houseHoldNumber"];
     if (json["listedHouseHoldNumber"] is int)
       this.listedHouseHoldNumber = json["listedHouseHoldNumber"];

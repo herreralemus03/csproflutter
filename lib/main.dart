@@ -1,19 +1,26 @@
 import 'package:boletas_app/pages/clusters_page.dart';
 import 'package:boletas_app/pages/form_page.dart';
 import 'package:boletas_app/pages/home_page.dart';
+import 'package:boletas_app/pages/intent_page.dart';
 import 'package:boletas_app/pages/interview_page.dart';
 import 'package:boletas_app/pages/raw_page.dart';
-import 'package:boletas_app/pages/record_files_page.dart';
 import 'package:boletas_app/providers/dictionary_provider.dart';
+import 'package:boletas_app/repository/db_repository.dart';
 import 'package:boletas_app/widgets/empty_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import "dart:math" as math;
 
 import 'package:flutter_json_widget/flutter_json_widget.dart';
+import 'package:path_provider/path_provider.dart';
 
-void main() {
+void main() async {
   runApp(MyApp());
+  final directory = await getExternalStorageDirectory();
+  DbHelper.initialize(directory.path + "/sqlite.db");
+  final content = await DbHelper.instance.getContent(
+      table: "clusters", pageRequest: PageRequest(offset: 0, limit: 2));
+  print(content);
 }
 
 class MyApp extends StatelessWidget {
@@ -50,9 +57,13 @@ class MyApp extends StatelessWidget {
               prefix: "code",
             ),
         "/clusters": (context) => ClustersPage(),
+        "/encuestas": (context) => IntentPage(),
       },
-      onUnknownRoute: (context) =>
-          MaterialPageRoute(builder: (context) => Scaffold(body: EmptyPage())),
+      onUnknownRoute: (context) => MaterialPageRoute(
+        builder: (context) => Scaffold(
+          body: EmptyPage(),
+        ),
+      ),
     );
   }
 }
@@ -89,38 +100,43 @@ class _TestPageState extends State<TestPage> {
         ],
       ),
       body: FutureBuilder(
-          future: dictionaryProvider.getDictionaries(),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return buildErrorContent(snapshot.error.toString());
-            } else if (snapshot.hasData) {
-              return ListView.builder(
-                itemCount: snapshot.data.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                      leading: CircleAvatar(
-                        child: Icon(Icons.book),
-                        backgroundColor: Colors.teal,
-                        foregroundColor: Colors.white,
-                      ),
-                      title: Text(snapshot.data[index]["name"]),
-                      subtitle: Text(snapshot.data[index]["sha256"]),
-                      onTap: () {
-                        showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                  scrollable: true,
-                                  content:
-                                      buildDialogContent(snapshot.data[index]));
-                            });
-                      });
-                },
-              );
-            } else {
-              return buildLoadingContent();
-            }
-          }),
+        future: dictionaryProvider.getDictionaries(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return buildErrorContent(snapshot.error.toString());
+          } else if (snapshot.hasData) {
+            return ListView.builder(
+              itemCount: snapshot.data.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: CircleAvatar(
+                    child: Icon(Icons.book),
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
+                  title: Text(snapshot.data[index]["name"]),
+                  subtitle: Text(snapshot.data[index]["sha256"]),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          scrollable: true,
+                          content: buildDialogContent(
+                            snapshot.data[index],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            );
+          } else {
+            return buildLoadingContent();
+          }
+        },
+      ),
     );
   }
 
