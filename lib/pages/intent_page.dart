@@ -47,18 +47,11 @@ class _IntentPageState extends State<IntentPage> {
                   final directory =
                       io.Directory("/mnt/sdcard/csentry/Entry").listSync();
                   return Column(
-                    children: directory
-                        .where(
-                      (element) =>
-                          element.path
-                              .split("/")
-                              .last
-                              .split(".")
-                              .last
-                              .toLowerCase() ==
-                          "pff",
-                    )
-                        .map(
+                    children: directory.where((element) {
+                      final fileName = element.path.split("/").last;
+                      final extension = fileName.split(".").last.toLowerCase();
+                      return extension == "pff";
+                    }).map(
                       (e) {
                         final stats = e.statSync();
                         final s = SelectableCircle(
@@ -82,9 +75,14 @@ class _IntentPageState extends State<IntentPage> {
                           },
                         );
                         return buildTile(
-                          leading: s,
+                          leading: Icon(Icons.app_registration),
                           title: Text("${e.path.split("/").last}"),
-                          subtitle: Text("${stats.accessed}"),
+                          subtitle: Text(
+                            "${stats.accessed}",
+                            style: TextStyle(
+                              fontSize: 12.0,
+                            ),
+                          ),
                           onTap: () {
                             startCsEntry(pffFile: e.path);
                           },
@@ -112,22 +110,11 @@ class _IntentPageState extends State<IntentPage> {
       Widget title,
       Widget subtitle,
       GestureTapCallback onTap}) {
-    return InkWell(
+    return ListTile(
       onTap: onTap?.call,
-      child: Row(
-        children: [
-          leading,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                title,
-                subtitle,
-              ],
-            ),
-          )
-        ],
-      ),
+      leading: leading,
+      title: title,
+      subtitle: subtitle,
     );
   }
 

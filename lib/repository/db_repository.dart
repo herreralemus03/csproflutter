@@ -2,6 +2,7 @@ import 'package:boletas_app/models/household.dart';
 import 'package:database/sql.dart';
 import 'package:database_adapter_sqlite/database_adapter_sqlite.dart';
 import 'package:flutter/material.dart';
+import 'package:recase/recase.dart';
 
 enum SortDirection { ASC, DESC }
 
@@ -10,16 +11,16 @@ class DbHelper {
   static DbHelper get instance => _instance;
   final String _path;
   static SqlClient sqlClient;
-  static bool _initialized = false;
 
   DbHelper.initialize(this._path) {
-    if (_initialized) return;
-    if (_instance == null) _instance = this;
-    _initialized = true;
     _setupDB();
   }
 
   Future _setupDB() async {
+    if (_instance != null)
+      return;
+    else
+      _instance = this;
     final config = SQLite(
       path: this._path,
     );
@@ -40,62 +41,105 @@ class DbHelper {
 
   Future<List<Map<String, dynamic>>> getContent({
     @required String table,
+    String where = "",
     PageRequest pageRequest,
+    bool buildNestedChild = false,
   }) async {
     final query = queryTable(table,
+        where: where,
         pageRequest: pageRequest ??
             PageRequest(
               offset: 0,
             ));
-    final rows = await query.toMaps();
-    return rows;
+    List<Map<String, dynamic>> rows = await query.toMaps();
+
+    if (!buildNestedChild)
+      return rows.map((e) {
+        Map<String, dynamic> map = new Map();
+        for (String key in e.keys) {
+          final camalKey = ReCase(key).camelCase;
+          map[camalKey] = e[key];
+        }
+        return map;
+      }).toList();
+    List<Map<String, dynamic>> rowsCopy = [];
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      Map<String, dynamic> rowCopy = Map();
+      for (final key in row.keys) {
+        if (key.contains("_uuid")) {
+          final tableName = key.split("_").first;
+          rowCopy[tableName] = (await getContent(
+                  table: tableName, where: "where uuid like '${row[key]}'"))
+              .first;
+        } else {
+          final camelKey = ReCase(key).camelCase;
+          rowCopy[camelKey] = row[key];
+        }
+      }
+      rowsCopy.add(rowCopy);
+    }
+    return rowsCopy;
   }
 
-  Future<PageData> buildPage(String tableName, PageRequest pageRequest) async {
-    final contentStats =
-        "select *, count(*) as totalElements, (select count(*) from (select * from $tableName limit ${pageRequest.offset},${pageRequest.offset})) as numberOfElements";
+  Future<Map<String, dynamic>> buildPage(
+    String tableName,
+    PageRequest pageRequest, {
+    String where = "",
+    bool buildNestedChild = false,
+  }) async {
+    final contentStats = "select *, count(*) as totalElements, " +
+        "(select count(*) from (select * from $tableName limit ${pageRequest.offset},${pageRequest.offset})) as numberOfElements " +
+        "from $tableName";
     final queryStats = sqlClient.query(contentStats);
     final resultStats = await queryStats.toMaps();
     Map<String, dynamic> stats = resultStats.first;
-    final totalElements = stats["totalElements"];
-    final numberOfElements = stats["numberOfElements"];
-    final totalPages = (totalElements / pageRequest.limit);
-    final pageNumber = pageRequest.page;
+    final int totalElements = stats["totalElements"];
+    final int numberOfElements = stats["numberOfElements"];
+    final int totalPages = totalElements ~/ pageRequest.limit;
+    final int pageNumber = pageRequest.page;
 
+    List<Map<String, dynamic>> content = await getContent(
+      table: tableName,
+      pageRequest: pageRequest,
+      buildNestedChild: buildNestedChild,
+      where: where,
+    );
     return PageData(
-        numberOfElements: numberOfElements,
-        size: numberOfElements,
-        empty: numberOfElements == 0,
-        totalPages: totalPages,
-        pageable: Pageable(
-          offset: pageRequest.offset,
-          pageNumber: pageNumber,
-          pageSize: pageRequest.size,
-          paged: true,
-          sort: Sort(
-            empty: pageRequest.orders.isNotEmpty,
-            sorted: pageRequest.orders.isNotEmpty,
-            unsorted: pageRequest.orders.isEmpty,
-          ),
-          unpaged: false,
-        ),
-        first: pageRequest.page == 0,
-        last: pageNumber >= totalPages,
-        number: pageNumber,
+      numberOfElements: numberOfElements,
+      size: numberOfElements,
+      empty: content.isEmpty,
+      totalPages: totalPages,
+      pageable: Pageable(
+        offset: pageRequest.offset,
+        pageNumber: pageNumber,
+        pageSize: pageRequest.size,
+        paged: true,
         sort: Sort(
           empty: pageRequest.orders.isNotEmpty,
           sorted: pageRequest.orders.isNotEmpty,
           unsorted: pageRequest.orders.isEmpty,
         ),
-        totalElements: totalElements,
-        content: await getContent(table: tableName, pageRequest: pageRequest));
+        unpaged: false,
+      ),
+      first: pageRequest.page == 0,
+      last: pageNumber >= totalPages,
+      number: pageNumber,
+      sort: Sort(
+        empty: pageRequest.orders.isNotEmpty,
+        sorted: pageRequest.orders.isNotEmpty,
+        unsorted: pageRequest.orders.isEmpty,
+      ),
+      totalElements: totalElements,
+      content: content,
+    ).toJson();
   }
 
   SqlClientTableQueryHelper queryTable(String table,
-      {PageRequest pageRequest}) {
+      {String where = "", PageRequest pageRequest}) {
     final query = sqlClient.query(
       buildPageable(
-        query: "select * from $table",
+        query: "select * from $table $where",
         pageRequest: pageRequest,
       ),
     );
@@ -184,8 +228,8 @@ class PageData {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.content != null) data["content"] = this.content;
-    if (this.pageable != null) data["pageable"] = this.pageable.toJson();
+    data["content"] = this.content;
+    data["pageable"] = this.pageable.toJson();
     data["last"] = this.last;
     data["totalPages"] = this.totalPages;
     data["totalElements"] = this.totalElements;

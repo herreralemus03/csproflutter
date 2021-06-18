@@ -1,8 +1,8 @@
 import 'package:boletas_app/models/household.dart';
-import 'package:boletas_app/pages/households_page.dart';
 import 'package:boletas_app/providers/cluster_provider.dart';
 import 'package:boletas_app/widgets/empty_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class ClustersPage extends StatefulWidget {
   @override
@@ -91,28 +91,7 @@ class _ClustersPageState extends State<ClustersPage> {
             itemCount: clusters.length,
             itemBuilder: (context, index) {
               final cluster = clusters[index];
-              return ListTile(
-                leading: Icon(Icons.account_tree),
-                title: Text(cluster.commune.name),
-                subtitle: Column(
-                  children: [
-                    Divider(),
-                    buildSubtitle("CODE", "${cluster.code}"),
-                    Divider(),
-                    buildSubtitle("REGION", "${cluster.region.name}"),
-                    Divider(),
-                    buildSubtitle("AREA", "${cluster.area.name}"),
-                    Divider(),
-                    buildSubtitle("PROVINCE", "${cluster.province.name}"),
-                    Divider(),
-                    buildSubtitle("DISTRICT", "${cluster.district.name}"),
-                  ],
-                ),
-                trailing: Icon(Icons.arrow_right),
-                onTap: () {
-                  navigateToHouseHoldsPage(cluster.uuid);
-                },
-              );
+              return buildItem(cluster);
             },
           );
         } else {
@@ -126,8 +105,52 @@ class _ClustersPageState extends State<ClustersPage> {
     );
   }
 
+  Widget buildItem(Cluster cluster) {
+    return Slidable(
+      actionPane: SlidableDrawerActionPane(),
+      secondaryActions: [
+        IconSlideAction(
+          caption: 'AGREGAR\nHOUSEHOLD',
+          color: Colors.blueAccent,
+          icon: Icons.add,
+        ),
+        IconSlideAction(
+          caption: 'CERRAR',
+          color: Colors.grey.shade600,
+          icon: Icons.close,
+        ),
+      ],
+      child: ListTile(
+        leading: Icon(Icons.account_tree),
+        title: Text(
+          "${cluster?.commune?.name}",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          children: [
+            Divider(),
+            buildSubtitle("CODE", "${cluster?.code}"),
+            Divider(),
+            buildSubtitle("REGION", "${cluster?.region?.name}"),
+            Divider(),
+            buildSubtitle("AREA", "${cluster?.area?.name}"),
+            Divider(),
+            buildSubtitle("PROVINCE", "${cluster?.province?.name}"),
+            Divider(),
+            buildSubtitle("DISTRICT", "${cluster?.district?.name}"),
+          ],
+        ),
+        trailing: Icon(Icons.arrow_right),
+        onTap: () {
+          navigateToHouseHoldsPage(cluster.uuid, cluster.code);
+        },
+      ),
+    );
+  }
+
   Widget buildSubtitle(String label, String text) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
@@ -149,16 +172,11 @@ class _ClustersPageState extends State<ClustersPage> {
     );
   }
 
-  void navigateToHouseHoldsPage(String uuid) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) {
-          return HouseHoldsPage(
-            clusterProvider: clusterProvider,
-            uuid: uuid,
-          );
-        },
-      ),
-    );
+  void navigateToHouseHoldsPage(String uuid, String code) {
+    Navigator.of(context).pushNamed("/households", arguments: <String, dynamic>{
+      "uuid": uuid,
+      "provider": clusterProvider,
+      "clusterCode": code,
+    });
   }
 }

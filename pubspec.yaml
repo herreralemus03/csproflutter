@@ -38,6 +38,8 @@ dependencies:
   selectable_circle_list: ^0.1.5+1
   database: ^0.3.3
   database_adapter_sqlite: ^0.1.0
+  recase: ^4.0.0
+  flutter_slidable: ^0.6.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

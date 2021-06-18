@@ -42,13 +42,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Map<String, IconData> buildItems() {
-    return Map.of({
-      "Dashboard": Icons.show_chart,
-      "Diccionarios": Icons.collections_bookmark_rounded,
-      "Equipos": Icons.group,
-      "Clusters": Icons.account_tree_rounded,
-      "Encuestas": Icons.assignment_rounded,
-    });
+    return Map.of(
+      {
+        "Diccionarios": Icons.collections_bookmark_rounded,
+        "Equipos": Icons.group,
+        "Clusters": Icons.account_tree_rounded,
+        "Encuestas": Icons.assignment_rounded,
+        "Dashboard": Icons.show_chart,
+      },
+    );
   }
 
   List<Widget> buildDrawerItems(Map<String, IconData> data) {

@@ -1,26 +1,21 @@
 import 'package:boletas_app/pages/clusters_page.dart';
+import 'package:boletas_app/pages/dff_page.dart';
 import 'package:boletas_app/pages/form_page.dart';
 import 'package:boletas_app/pages/home_page.dart';
-import 'package:boletas_app/pages/intent_page.dart';
+import 'package:boletas_app/pages/households_page.dart';
 import 'package:boletas_app/pages/interview_page.dart';
 import 'package:boletas_app/pages/raw_page.dart';
+import 'package:boletas_app/pages/sync_page.dart';
 import 'package:boletas_app/providers/dictionary_provider.dart';
-import 'package:boletas_app/repository/db_repository.dart';
 import 'package:boletas_app/widgets/empty_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import "dart:math" as math;
 
 import 'package:flutter_json_widget/flutter_json_widget.dart';
-import 'package:path_provider/path_provider.dart';
 
 void main() async {
   runApp(MyApp());
-  final directory = await getExternalStorageDirectory();
-  DbHelper.initialize(directory.path + "/sqlite.db");
-  final content = await DbHelper.instance.getContent(
-      table: "clusters", pageRequest: PageRequest(offset: 0, limit: 2));
-  print(content);
 }
 
 class MyApp extends StatelessWidget {
@@ -49,7 +44,7 @@ class MyApp extends StatelessWidget {
         ),
         backgroundColor: Colors.white,
       ),
-      initialRoute: "/",
+      initialRoute: "/sync",
       routes: {
         "/": (context) => HomePage(),
         "/diccionarios": (BuildContext context) => TestPage(
@@ -57,7 +52,9 @@ class MyApp extends StatelessWidget {
               prefix: "code",
             ),
         "/clusters": (context) => ClustersPage(),
-        "/encuestas": (context) => IntentPage(),
+        "/encuestas": (context) => DffPage(),
+        "/households": (context) => HouseHoldsPage(),
+        "/sync": (context) => SyncPage(),
       },
       onUnknownRoute: (context) => MaterialPageRoute(
         builder: (context) => Scaffold(

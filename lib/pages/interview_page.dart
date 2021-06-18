@@ -19,7 +19,6 @@ class _InterViewPageState extends State<InterViewPage> {
   void initState() {
     super.initState();
     this.interview = Dictionary.fromJson(widget.arguments);
-    print(this.interview.toJson());
   }
 
   @override
