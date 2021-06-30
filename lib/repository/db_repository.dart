@@ -98,7 +98,6 @@ class DbHelper {
     final int numberOfElements = stats["numberOfElements"];
     final int totalPages = totalElements ~/ pageRequest.limit;
     final int pageNumber = pageRequest.page;
-
     List<Map<String, dynamic>> content = await getContent(
       table: tableName,
       pageRequest: pageRequest,

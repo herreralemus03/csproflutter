@@ -1,4 +1,5 @@
 import 'package:boletas_app/pages/clusters_page.dart';
+import 'package:boletas_app/pages/devices_page.dart';
 import 'package:boletas_app/pages/dff_page.dart';
 import 'package:boletas_app/pages/form_page.dart';
 import 'package:boletas_app/pages/home_page.dart';
@@ -6,6 +7,7 @@ import 'package:boletas_app/pages/households_page.dart';
 import 'package:boletas_app/pages/interview_page.dart';
 import 'package:boletas_app/pages/raw_page.dart';
 import 'package:boletas_app/pages/sync_page.dart';
+import 'package:boletas_app/pages/users_page.dart';
 import 'package:boletas_app/providers/dictionary_provider.dart';
 import 'package:boletas_app/widgets/empty_page.dart';
 import 'package:flutter/material.dart';
@@ -44,9 +46,11 @@ class MyApp extends StatelessWidget {
         ),
         backgroundColor: Colors.white,
       ),
-      initialRoute: "/sync",
+      initialRoute: "/equipos",
       routes: {
         "/": (context) => HomePage(),
+        "/equipos": (context) => UsersPage(),
+        "/devices": (context) => DevicesPage(),
         "/diccionarios": (BuildContext context) => TestPage(
               title: "Home page",
               prefix: "code",

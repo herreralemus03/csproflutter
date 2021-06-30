@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:boletas_app/models/household.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:boletas_app/config/server_config.dart';
 import 'package:boletas_app/repository/db_repository.dart';
@@ -8,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 
 class ClusterProvider {
   ClusterProvider() {
-    setupDb();
+    if (!kIsWeb) setupDb();
   }
   setupDb() async {
     final directory = await getExternalStorageDirectory();
@@ -68,42 +69,36 @@ class ClusterProvider {
         return clustersPageData;
       });
     }
-    await setupDb();
     isLoading = true;
     final map = {
       "keyword": params["keyword"] ?? "",
-      "page": "${loadNextPage ? clustersPageData.number + 1 : 0}",
+      "page": "${loadNextPage ? clustersPageData.number++ : 0}",
       "size": params["size"] ?? "15",
     };
-    /* 
-    var codeAux = "00000";
-    var keywordAux = map["keyword"].length <= codeAux.length
-        ? map["keyword"]
-        : map["keyword"].substring(0, 6);
-    var startIndex = codeAux.length - keywordAux.length;
-    if (keywordAux.isNotEmpty) {
-      codeAux = codeAux.replaceRange(
-        startIndex,
-        codeAux.length,
-        keywordAux,
-      );
-    } 
-    final response = await doGet("get/all", map);
-    final decodedData = json.decode(utf8.decode(response.bodyBytes));
-    */
-    final decodedJson = await DbHelper.instance.buildPage(
-        "clusters",
-        PageRequest.page(
-          page: int.parse(map["page"]),
-          size: int.parse(map["size"]),
-        ),
-        buildNestedChild: true,
-        where: map["keyword"].isEmpty
-            ? ""
-            : "where code like '${map["keyword"]}'");
-    this.clustersPageData =
-        syncData(loadNextPage, decodedJson, clustersPageData);
-    return this.clustersPageData;
+    if (kIsWeb) {
+      await setupDb();
+      final decodedJson = await DbHelper.instance.buildPage(
+          "clusters",
+          PageRequest.page(
+            page: int.parse(map["page"]),
+            size: int.parse(map["size"]),
+          ),
+          buildNestedChild: true,
+          where: map["keyword"].isEmpty
+              ? ""
+              : "where code like '${map["keyword"]}'");
+      this.clustersPageData =
+          syncData(loadNextPage, decodedJson, clustersPageData);
+      isLoading = false;
+
+      return this.clustersPageData;
+    } else {
+      final response = await doGet("get/all", map);
+      final decodedData = json.decode(utf8.decode(response.bodyBytes));
+      clustersPageData = syncData(loadNextPage, decodedData, clustersPageData);
+      isLoading = false;
+      return this.clustersPageData;
+    }
   }
 
   StreamController<ClustersPageData> syncStreamController =
@@ -112,12 +107,9 @@ class ClusterProvider {
   Stream<ClustersPageData> get syncDataStream => syncStreamController.stream;
   Future<ClustersPageData> getSyncData() async {
     await syncPage(page: currentSyncPage, sync: false);
-    while (currentSyncPage <
-            this.syncPageData .totalPages ??
-        100) {
+    while (currentSyncPage < this.syncPageData.totalPages ?? 100) {
       await syncPage(page: currentSyncPage++, sync: true);
     }
-    print("completed");
     return this.syncPageData;
   }
 
@@ -155,9 +147,9 @@ class ClusterProvider {
       return clustersPageData;
     }
     Map<String, Cluster> clusterListTmp = Map();
-    clusterListTmp.addAll(Map.from(clustersPageData.content));
+    clusterListTmp.addAll(Map.of(clustersPageData.content));
     clustersPageData = ClustersPageData.fromJson(decodedData);
-    clusterListTmp.addAll(Map.from(clustersPageData.content));
+    clusterListTmp.addAll(Map.of(clustersPageData.content));
     clustersPageData.content = clusterListTmp;
     dataSink(clustersPageData);
     isLoading = false;
@@ -166,21 +158,38 @@ class ClusterProvider {
 
   Future<HouseHoldsPageData> getClusterHouseHolds(
       {Map<String, String> params = const {}}) async {
-    await setupDb();
-    final decodedData = await DbHelper.instance.buildPage(
-        "households", PageRequest.page(page: 0, size: 20),
-        where: "where cluster_uuid like '${params['uuid']}'");
-    //final response = await doGet("get/households", params);
-    //final decodedData = json.decode(utf8.decode(response.bodyBytes));
-    final houseHolds = HouseHoldsPageData.fromJson(decodedData);
-    if (!houseHolds.first) {
-      var houseHoldsTmp = await houseHoldDataStream.first;
-      var houseHoldsContentTmp = houseHoldsTmp.content;
-      houseHolds.content.addAll(houseHoldsContentTmp);
-      houseHoldDataSink(houseHolds);
+    if (!kIsWeb) {
+      final response = await doGet("get/households", params);
+      final decodedData = json.decode(utf8.decode(response.bodyBytes));
+
+      final houseHolds = HouseHoldsPageData.fromJson(decodedData);
+      if (!houseHolds.first) {
+        var houseHoldsTmp = await houseHoldDataStream.first;
+        var houseHoldsContentTmp = houseHoldsTmp.content;
+        houseHolds.content.addAll(houseHoldsContentTmp);
+        houseHoldDataSink(houseHolds);
+      } else {
+        houseHoldDataSink(houseHolds);
+      }
+      return houseHolds;
     } else {
-      houseHoldDataSink(houseHolds);
+      await setupDb();
+      final decodedData = await DbHelper.instance.buildPage(
+          "households", PageRequest.page(page: 0, size: 20),
+          where: "where cluster_uuid like '${params['uuid']}'");
+
+      final houseHolds = HouseHoldsPageData.fromJson(decodedData);
+      if (!houseHolds.first) {
+        var houseHoldsTmp = await houseHoldDataStream.first;
+        var houseHoldsContentTmp = houseHoldsTmp.content;
+        houseHolds.content.addAll(houseHoldsContentTmp);
+        houseHoldDataSink(houseHolds);
+      } else {
+        houseHoldDataSink(houseHolds);
+      }
+      return houseHolds;
     }
-    return houseHolds;
   }
+
+  Cluster getCluster({String code}) {}
 }

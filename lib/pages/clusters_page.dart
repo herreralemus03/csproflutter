@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class ClustersPage extends StatefulWidget {
+  final bool selectionMode;
+  ClustersPage({this.selectionMode = false});
   @override
   _ClustersPageState createState() => _ClustersPageState();
 }
@@ -142,7 +144,11 @@ class _ClustersPageState extends State<ClustersPage> {
         ),
         trailing: Icon(Icons.arrow_right),
         onTap: () {
-          navigateToHouseHoldsPage(cluster.uuid, cluster.code);
+          if (widget.selectionMode) {
+            Navigator.of(context).pop(cluster);
+          } else {
+            navigateToHouseHoldsPage(cluster.uuid, cluster.code);
+          }
         },
       ),
     );

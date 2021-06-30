@@ -28,6 +28,7 @@ class _HouseHoldsPageState extends State<HouseHoldsPage> {
     provider = arguments["provider"];
     uuid = arguments["uuid"];
     clusterCode = arguments["clusterCode"];
+
     return Scaffold(
       appBar: AppBar(
         title: Row(

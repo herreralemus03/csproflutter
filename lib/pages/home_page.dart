@@ -49,6 +49,7 @@ class _HomePageState extends State<HomePage> {
         "Clusters": Icons.account_tree_rounded,
         "Encuestas": Icons.assignment_rounded,
         "Dashboard": Icons.show_chart,
+        "Sync": Icons.sync,
       },
     );
   }

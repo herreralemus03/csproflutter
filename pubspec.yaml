@@ -40,6 +40,7 @@ dependencies:
   database_adapter_sqlite: ^0.1.0
   recase: ^4.0.0
   flutter_slidable: ^0.6.0
+  idb_sqflite: ^1.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
