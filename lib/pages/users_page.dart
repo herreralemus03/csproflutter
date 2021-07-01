@@ -18,55 +18,62 @@ class _UsersPageState extends State<UsersPage> {
       appBar: AppBar(
         title: Text("SUPERVISORES"),
       ),
-      body: Container(
-        child: FutureBuilder<Map<String, dynamic>>(
-          future: usersProvider.getUsers(),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return ErrorPage(
-                message: "${snapshot.error}",
-              );
-            } else if (snapshot.hasData) {
-              return ListView.builder(
-                itemCount: snapshot.data["content"].length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor:
-                          Theme.of(context).appBarTheme.backgroundColor,
-                      child: Text(
-                          "${snapshot.data["content"][index]["person"]["firstName"]}"
-                              .substring(0, 1)),
-                    ),
-                    trailing: Icon(Icons.admin_panel_settings_sharp),
-                    title: Text(
-                        "${snapshot.data["content"][index]["person"]["firstName"]} ${snapshot.data["content"][index]["person"]["lastName"]}"),
-                    subtitle:
-                        Text("${snapshot.data["content"][index]["username"]}"),
-                    onTap: () => goToDetailsPage(
-                        uuid: "${snapshot.data["content"][index]["uuid"]}"),
-                  );
-                },
-              );
-            } else {
-              return Container(
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            }
-          },
+      body: RefreshIndicator(
+        onRefresh: () => Navigator.of(context).popAndPushNamed("/equipos"),
+        child: Container(
+          child: FutureBuilder<Map<String, dynamic>>(
+            future: usersProvider.getUsers(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return ErrorPage(
+                  message: "${snapshot.error}",
+                );
+              } else if (snapshot.hasData) {
+                return ListView.builder(
+                  itemCount: snapshot.data["content"].length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor:
+                            Theme.of(context).appBarTheme.backgroundColor,
+                        child: Text(
+                            "${snapshot.data["content"][index]["person"]["firstName"]}"
+                                .substring(0, 1)),
+                      ),
+                      trailing: Icon(Icons.admin_panel_settings_sharp),
+                      title: Text(
+                          "${snapshot.data["content"][index]["person"]["firstName"]} ${snapshot.data["content"][index]["person"]["lastName"]}"),
+                      subtitle: Text(
+                          "${snapshot.data["content"][index]["username"]}"),
+                      onTap: () => goToDetailsPage(
+                        uuid: "${snapshot.data["content"][index]["uuid"]}",
+                        fullName:
+                            "${snapshot.data["content"][index]["person"]["firstName"]} ${snapshot.data["content"][index]["person"]["lastName"]}",
+                      ),
+                    );
+                  },
+                );
+              } else {
+                return Container(
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+            },
+          ),
         ),
       ),
     );
   }
 
-  void goToDetailsPage({@required String uuid}) {
+  void goToDetailsPage({@required String uuid, String fullName = ""}) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => UserDetailsPage(
           provider: usersProvider,
           uuid: uuid,
+          fullName: fullName,
         ),
       ),
     );

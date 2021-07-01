@@ -2,57 +2,133 @@ import 'package:boletas_app/models/household.dart';
 import 'package:boletas_app/pages/devices_page.dart';
 import 'package:boletas_app/providers/cluster_provider.dart';
 import 'package:boletas_app/providers/users_provider.dart';
-import 'package:boletas_app/widgets/empty_page.dart';
-import 'package:boletas_app/widgets/error_page.dart';
 import 'package:flutter/material.dart';
 
 import 'clusters_page.dart';
 
 class UserDetailsPage extends StatefulWidget {
   final String uuid;
+  final String fullName;
   final UsersProvider provider;
-  const UserDetailsPage({Key key, @required this.uuid, @required this.provider})
+  const UserDetailsPage(
+      {Key key, this.fullName, @required this.uuid, @required this.provider})
       : super(key: key);
 
   @override
   _UserDetailsPageState createState() => _UserDetailsPageState();
 }
 
-class _UserDetailsPageState extends State<UserDetailsPage> {
+class _UserDetailsPageState extends State<UserDetailsPage>
+    with TickerProviderStateMixin {
   ClusterProvider clusterProvider = ClusterProvider();
   TextEditingController clusterSearchController = TextEditingController();
+  TabController tabController;
+
+  @override
+  void initState() {
+    tabController = TabController(length: 3, vsync: this);
+    super.initState();
+  }
+
+  Widget buildTab({IconData icon, String title}) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          size: 20,
+        ),
+        SizedBox(
+          height: 10,
+        ),
+        Text(
+          "$title".toUpperCase(),
+          style: TextStyle(fontSize: 10),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.uuid}"),
+        title: Text("${widget.fullName}"),
         bottom: TabBar(
+          controller: tabController,
           tabs: [
             Tab(
-              child: Text("SEGMENTOS"),
+              child: buildTab(
+                icon: Icons.account_tree,
+                title: "segmentos",
+              ),
             ),
             Tab(
-              child: Text("ENCUESTADORES"),
+              child: buildTab(
+                icon: Icons.person,
+                title: "encuestadores",
+              ),
             ),
             Tab(
-              child: Text("DISPOSITIVOS"),
+              child: buildTab(
+                icon: Icons.phone_android,
+                title: "dispositivos",
+              ),
             ),
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              child: buildClustersContent(),
-              constraints: BoxConstraints(maxHeight: 300),
+      body: TabBarView(
+        controller: tabController,
+        children: [
+          Scaffold(
+            body: Center(child: buildClusterList()),
+            floatingActionButton: FloatingActionButton(
+              child: Icon(Icons.add),
+              onPressed: () {
+                Navigator.of(context)
+                    .push<String>(MaterialPageRoute(builder: (context) {
+                  return ClustersPage(selectionMode: true);
+                })).then((value) => value != null
+                        ? widget.provider
+                            .addUserCluster(uuid: widget.uuid, cluster: value)
+                            .then((value) => setState(() {}))
+                        : () {});
+              },
             ),
-            Container(
-              child: buildDevicesContent(widget.uuid),
-              constraints: BoxConstraints(maxHeight: 300),
+          ),
+          Scaffold(
+            body: Center(child: buildDevicesList()),
+            floatingActionButton: FloatingActionButton(
+              child: Icon(Icons.add),
+              onPressed: () {
+                Navigator.of(context)
+                    .push<String>(MaterialPageRoute(builder: (context) {
+                  return DevicesPage(isSelectable: true);
+                })).then((value) => value != null
+                        ? widget.provider
+                            .addUserDevice(uuid: widget.uuid, device: value)
+                            .then((value) => setState(() {}))
+                        : () {});
+              },
             ),
-          ],
-        ),
+          ),
+          Scaffold(
+            body: Center(child: buildDevicesList()),
+            floatingActionButton: FloatingActionButton(
+              child: Icon(Icons.add),
+              onPressed: () {
+                Navigator.of(context)
+                    .push<String>(MaterialPageRoute(builder: (context) {
+                  return DevicesPage(isSelectable: true);
+                })).then((value) => value != null
+                        ? widget.provider
+                            .addUserDevice(uuid: widget.uuid, device: value)
+                            .then((value) => setState(() {}))
+                        : () {});
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

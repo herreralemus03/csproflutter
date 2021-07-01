@@ -145,7 +145,7 @@ class _ClustersPageState extends State<ClustersPage> {
         trailing: Icon(Icons.arrow_right),
         onTap: () {
           if (widget.selectionMode) {
-            Navigator.of(context).pop(cluster);
+            Navigator.of(context).pop(cluster.uuid);
           } else {
             navigateToHouseHoldsPage(cluster.uuid, cluster.code);
           }
